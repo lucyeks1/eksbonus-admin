@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <title>Güvenli Admin Panel | EKS Bonus</title>
+  <style>
+    body { font-family: sans-serif; padding: 2rem; background: #f4f4f4; }
+    input, textarea { width: 100%%; padding: 0.5rem; margin-top: 0.5rem; }
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+  <div id="login">
+    <h2>Admin Giriş</h2>
+    <input id="username" placeholder="Kullanıcı Adı"><br>
+    <input id="password" type="password" placeholder="Şifre"><br>
+    <button onclick="login()">Giriş Yap</button>
+  </div>
+
+  <div id="panel" class="hidden">
+    <h2>Bonus Ekle</h2>
+    <form id="bonusForm">
+      <input name="isim" placeholder="Site Adı" required><br>
+      <input name="logo" placeholder="Logo URL" required><br>
+      <input name="puan" placeholder="Puan (örn: 4.9)" required><br>
+      <input name="oran" placeholder="Bonus Oranı" required><br>
+      <input name="çevrim" placeholder="Çevrim Şartı" required><br>
+      <textarea name="detay" placeholder="Bonus Detayı" required></textarea><br>
+      <input name="link" placeholder="Site Linki" required><br>
+      <input name="etiketler" placeholder="Etiketler (virgül ile)" required><br>
+      <button type="submit">BONUSU KAYDET</button>
+    </form>
+
+    <hr><br>
+    <h2>Bonuslar</h2>
+    <ul id="liste"></ul>
+  </div>
+
+<script>
+  const login = () => {
+    const u = document.getElementById('username').value;
+    const p = document.getElementById('password').value;
+    fetch('/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: u, password: p })
+    }).then(res => res.json()).then(data => {
+      if (data.success) {
+        document.getElementById('login').style.display = 'none';
+        document.getElementById('panel').style.display = 'block';
+        fetchBonuslar();
+      } else {
+        alert("Hatalı giriş!");
+      }
+    });
+  }
+
+  const fetchBonuslar = () => {
+    fetch('/bonuslar')
+      .then(res => res.json())
+      .then(data => {
+        const liste = document.getElementById('liste');
+        liste.innerHTML = "";
+        data.forEach((b, i) => {
+          const li = document.createElement('li');
+          li.innerHTML = `
+            <b>${b.isim}</b> – ${b.oran}
+            <button onclick="sil(${i})">Sil</button>
+          `;
+          liste.appendChild(li);
+        });
+      });
+  }
+
+  const sil = (index) => {
+    fetch('/sil/' + index, { method: 'DELETE' })
+      .then(() => fetchBonuslar());
+  }
+
+  const form = document.getElementById('bonusForm');
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const data = Object.fromEntries(new FormData(form));
+    data.etiketler = data.etiketler.split(',').map(e => e.trim());
+    fetch('/ekle', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    }).then(() => {
+      form.reset();
+      fetchBonuslar();
+    });
+  });
+</script>
+</body>
+</html>
