@@ -34,6 +34,16 @@ app.post("/ekle", (req, res) => {
   });
 });
 
+app.post("/guncelle/:id", (req, res) => {
+  const id = parseInt(req.params.id);
+  const guncel = req.body;
+  fs.readFile("bonuslar.json", "utf-8", (err, data) => {
+    let bonuslar = JSON.parse(data);
+    bonuslar[id] = guncel;
+    fs.writeFile("bonuslar.json", JSON.stringify(bonuslar, null, 2), () => res.sendStatus(200));
+  });
+});
+
 app.delete("/sil/:id", (req, res) => {
   const id = parseInt(req.params.id);
   fs.readFile("bonuslar.json", "utf-8", (err, data) => {
@@ -44,5 +54,5 @@ app.delete("/sil/:id", (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`✅ Admin panel çalışıyor: http://localhost:${PORT}/admin.html`);
+  console.log(`✅ Gelişmiş admin panel: http://localhost:${PORT}/admin.html`);
 });

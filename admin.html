@@ -2,95 +2,121 @@
 <html lang="tr">
 <head>
   <meta charset="UTF-8">
-  <title>Güvenli Admin Panel | EKS Bonus</title>
-  <style>
-    body { font-family: sans-serif; padding: 2rem; background: #f4f4f4; }
-    input, textarea { width: 100%%; padding: 0.5rem; margin-top: 0.5rem; }
-    .hidden { display: none; }
-  </style>
+  <title>EKS Bonus Admin</title>
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-  <div id="login">
-    <h2>Admin Giriş</h2>
-    <input id="username" placeholder="Kullanıcı Adı"><br>
-    <input id="password" type="password" placeholder="Şifre"><br>
-    <button onclick="login()">Giriş Yap</button>
+<body class="bg-gray-900 text-white p-6 font-sans">
+
+  <div id="login" class="max-w-md mx-auto mt-12 bg-gray-800 p-6 rounded-lg shadow-lg">
+    <h2 class="text-2xl font-bold mb-4 text-center">🔐 Admin Giriş</h2>
+    <input id="username" placeholder="Kullanıcı Adı" class="w-full p-2 rounded mb-2 text-black">
+    <input id="password" type="password" placeholder="Şifre" class="w-full p-2 rounded mb-4 text-black">
+    <button onclick="login()" class="w-full bg-blue-600 hover:bg-blue-700 py-2 rounded">Giriş Yap</button>
   </div>
 
-  <div id="panel" class="hidden">
-    <h2>Bonus Ekle</h2>
-    <form id="bonusForm">
-      <input name="isim" placeholder="Site Adı" required><br>
-      <input name="logo" placeholder="Logo URL" required><br>
-      <input name="puan" placeholder="Puan (örn: 4.9)" required><br>
-      <input name="oran" placeholder="Bonus Oranı" required><br>
-      <input name="çevrim" placeholder="Çevrim Şartı" required><br>
-      <textarea name="detay" placeholder="Bonus Detayı" required></textarea><br>
-      <input name="link" placeholder="Site Linki" required><br>
-      <input name="etiketler" placeholder="Etiketler (virgül ile)" required><br>
-      <button type="submit">BONUSU KAYDET</button>
+  <div id="panel" class="hidden max-w-3xl mx-auto mt-10 space-y-6">
+    <h2 class="text-xl font-bold">🎁 Bonus Formu</h2>
+    <form id="bonusForm" class="bg-gray-800 p-4 rounded-lg space-y-3">
+      <input name="isim" placeholder="Site Adı" class="w-full p-2 rounded text-black" required>
+      <input name="logo" placeholder="Logo URL" class="w-full p-2 rounded text-black" required>
+      <input name="puan" placeholder="Puan (örn: 4.9)" class="w-full p-2 rounded text-black" required>
+      <input name="oran" placeholder="Bonus Oranı" class="w-full p-2 rounded text-black" required>
+      <input name="çevrim" placeholder="Çevrim Şartı" class="w-full p-2 rounded text-black" required>
+      <textarea name="detay" placeholder="Detay" class="w-full p-2 rounded text-black"></textarea>
+      <input name="link" placeholder="Site Linki" class="w-full p-2 rounded text-black" required>
+      <input name="etiketler" placeholder="Etiketler (virgül ile)" class="w-full p-2 rounded text-black" required>
+      <input type="hidden" name="index">
+      <button type="submit" class="w-full bg-green-600 hover:bg-green-700 py-2 rounded">💾 Kaydet</button>
     </form>
 
-    <hr><br>
-    <h2>Bonuslar</h2>
-    <ul id="liste"></ul>
+    <h2 class="text-xl font-bold mt-10">📋 Bonus Listesi</h2>
+    <ul id="liste" class="space-y-2"></ul>
   </div>
 
 <script>
-  const login = () => {
-    const u = document.getElementById('username').value;
-    const p = document.getElementById('password').value;
-    fetch('/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username: u, password: p })
-    }).then(res => res.json()).then(data => {
-      if (data.success) {
-        document.getElementById('login').style.display = 'none';
-        document.getElementById('panel').style.display = 'block';
-        fetchBonuslar();
-      } else {
-        alert("Hatalı giriş!");
-      }
-    });
-  }
+let isEditing = false;
 
-  const fetchBonuslar = () => {
-    fetch('/bonuslar')
-      .then(res => res.json())
-      .then(data => {
-        const liste = document.getElementById('liste');
-        liste.innerHTML = "";
-        data.forEach((b, i) => {
-          const li = document.createElement('li');
-          li.innerHTML = `
-            <b>${b.isim}</b> – ${b.oran}
-            <button onclick="sil(${i})">Sil</button>
-          `;
-          liste.appendChild(li);
-        });
-      });
-  }
-
-  const sil = (index) => {
-    fetch('/sil/' + index, { method: 'DELETE' })
-      .then(() => fetchBonuslar());
-  }
-
-  const form = document.getElementById('bonusForm');
-  form.addEventListener('submit', (e) => {
-    e.preventDefault();
-    const data = Object.fromEntries(new FormData(form));
-    data.etiketler = data.etiketler.split(',').map(e => e.trim());
-    fetch('/ekle', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
-    }).then(() => {
-      form.reset();
+function login() {
+  const u = document.getElementById('username').value;
+  const p = document.getElementById('password').value;
+  fetch('/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username: u, password: p })
+  }).then(res => res.json()).then(data => {
+    if (data.success) {
+      document.getElementById('login').style.display = 'none';
+      document.getElementById('panel').style.display = 'block';
       fetchBonuslar();
-    });
+    } else {
+      alert("Hatalı giriş!");
+    }
   });
+}
+
+function fetchBonuslar() {
+  fetch('/bonuslar')
+    .then(res => res.json())
+    .then(data => {
+      const liste = document.getElementById('liste');
+      liste.innerHTML = "";
+      data.forEach((b, i) => {
+        const li = document.createElement('li');
+        li.className = "bg-gray-800 p-3 rounded flex justify-between items-center";
+        li.innerHTML = `
+          <div>
+            <b>${b.isim}</b> – <span class="text-green-400">${b.oran}</span>
+          </div>
+          <div class="space-x-2">
+            <button onclick="edit(${i})" class="bg-yellow-500 hover:bg-yellow-600 px-2 py-1 rounded">Düzenle</button>
+            <button onclick="sil(${i})" class="bg-red-600 hover:bg-red-700 px-2 py-1 rounded">Sil</button>
+          </div>
+        `;
+        liste.appendChild(li);
+      });
+    });
+}
+
+function edit(index) {
+  fetch('/bonuslar')
+    .then(res => res.json())
+    .then(data => {
+      const bonus = data[index];
+      const form = document.getElementById('bonusForm');
+      for (let key in bonus) {
+        if (key === "etiketler") {
+          form[key].value = bonus[key].join(", ");
+        } else if (form[key]) {
+          form[key].value = bonus[key];
+        }
+      }
+      form.index.value = index;
+      isEditing = true;
+    });
+}
+
+function sil(index) {
+  fetch('/sil/' + index, { method: 'DELETE' })
+    .then(() => fetchBonuslar());
+}
+
+const form = document.getElementById('bonusForm');
+form.addEventListener('submit', (e) => {
+  e.preventDefault();
+  const data = Object.fromEntries(new FormData(form));
+  data.etiketler = data.etiketler.split(',').map(e => e.trim());
+
+  const url = isEditing ? '/guncelle/' + data.index : '/ekle';
+  fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data)
+  }).then(() => {
+    form.reset();
+    isEditing = false;
+    fetchBonuslar();
+  });
+});
 </script>
 </body>
 </html>
